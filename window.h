@@ -19,6 +19,8 @@ struct vtk_window {
 		vtk_event_handler
 			close,
 			draw,
+			key_press,
+			key_release,
 			resize;
 		void *data;
 	} event;

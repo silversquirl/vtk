@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <cairo.h>
 #include <vtk.h>
@@ -5,6 +6,7 @@
 struct state {
 	vtk_window win;
 	cairo_t *cr;
+	bool flip;
 };
 
 void close_handler(vtk_event ev, void *u) {
@@ -22,11 +24,27 @@ void draw_handler(vtk_event ev, void *u) {
 	cairo_set_source_rgb(s->cr, 0, 0, 0);
 	cairo_fill(s->cr);
 
-	cairo_move_to(s->cr, 0, 0);
-	cairo_line_to(s->cr, w, h);
+	if (s->flip) {
+		cairo_move_to(s->cr, w, 0);
+		cairo_line_to(s->cr, 0, h);
+	} else {
+		cairo_move_to(s->cr, 0, 0);
+		cairo_line_to(s->cr, w, h);
+	}
 	cairo_set_source_rgb(s->cr, 1, 1, 1);
 	cairo_set_line_width(s->cr, 2);
 	cairo_stroke(s->cr);
+}
+
+void key_press_handler(vtk_event ev, void *u) {
+	struct state *s = u;
+
+	if (ev.key.key == VTK_K_ESCAPE) {
+		close_handler(ev, u);
+	} else if (ev.key.key == 'f' && ev.key.mods == VTK_M_CONTROL) {
+		s->flip = !s->flip;
+		vtk_window_redraw(s->win);
+	}
 }
 
 int main() {
@@ -48,10 +66,12 @@ int main() {
 	struct state s = {
 		.win = win,
 		.cr = vtk_window_get_cairo(win),
+		.flip = false,
 	};
 
 	vtk_window_set_event_handler(win, VTK_EV_CLOSE, close_handler);
 	vtk_window_set_event_handler(win, VTK_EV_DRAW, draw_handler);
+	vtk_window_set_event_handler(win, VTK_EV_KEY_PRESS, key_press_handler);
 	vtk_window_set_event_handler_data(win, &s);
 
 	vtk_window_mainloop(win);

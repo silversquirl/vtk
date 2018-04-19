@@ -19,6 +19,7 @@ typedef struct vtk_window *vtk_window;
 vtk_err vtk_window_new(vtk_window *win, vtk root, const char *title, int x, int y, int width, int height);
 void vtk_window_destroy(vtk_window win);
 void vtk_window_close(vtk_window win);
+void vtk_window_redraw(vtk_window win);
 void vtk_window_mainloop(vtk_window win);
 void vtk_window_set_title(vtk_window win, const char *title);
 void vtk_window_get_size(vtk_window win, int *width, int *height);
@@ -27,11 +28,44 @@ cairo_t *vtk_window_get_cairo(vtk_window win);
 typedef enum vtk_event_type {
 	VTK_EV_CLOSE,
 	VTK_EV_DRAW,
+	VTK_EV_KEY_PRESS,
+	VTK_EV_KEY_RELEASE,
 	VTK_EV_RESIZE,
 } vtk_event_type;
 
+typedef enum vtk_key {
+	VTK_K_BACKSPACE = 0x08,
+	VTK_K_TAB = 0x09,
+	VTK_K_RETURN = 0x0a,
+	VTK_K_ESCAPE = 0x1b,
+	VTK_K_SPACE = 0x20,
+	VTK_K_DELETE = 0x7f,
+	VTK_K_INSERT,
+
+	VTK_K_PAGE_UP,
+	VTK_K_PAGE_DOWN,
+	VTK_K_HOME,
+	VTK_K_END,
+	VTK_K_UP,
+	VTK_K_DOWN,
+	VTK_K_LEFT,
+	VTK_K_RIGHT,
+} vtk_key;
+
+typedef enum vtk_modifiers {
+	VTK_M_SHIFT	= 1 << 0,
+	VTK_M_CAPS_LOCK	= 1 << 1,
+	VTK_M_CONTROL	= 1 << 2,
+	VTK_M_ALT	= 1 << 3,
+	VTK_M_SUPER	= 1 << 4,
+} vtk_modifiers;
+
 typedef struct vtk_event {
 	vtk_event_type type;
+	struct vtk_key_event {
+		vtk_key key;	// ASCII character or value from vtk_key
+		vtk_modifiers mods;	// ORed mask of values from vtk_modifiers
+	} key;
 } vtk_event;
 
 typedef void (*vtk_event_handler)(vtk_event ev, void *u);
