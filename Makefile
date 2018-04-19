@@ -9,7 +9,7 @@ clean:
 	rm -f *.o
 	rm -f libvtk.a
 
-libvtk.a: error.o root.o window.o
+libvtk.a: error.o event.o root.o window.o
 	ar rcs $@ $^
 
 %.o: %.c %.h
