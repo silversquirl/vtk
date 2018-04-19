@@ -1,0 +1,3 @@
+*.o
+*.a
+examples/hello-world
