@@ -37,7 +37,7 @@ vtk_err vtk_window_new(vtk_window *win, vtk root, const char *title, int x, int 
 	(*win)->cr = cr;
 
 	// Set all the event handlers to NULL
-	(*win)->event_handlers = (struct vtk_event_handlers){ NULL };
+	(*win)->event = (struct vtk_event_handlers){ NULL };
 
 	return 0;
 }
@@ -53,7 +53,7 @@ void vtk_window_close(vtk_window win) { win->should_close = true; }
 
 static void _vtk_window_draw(vtk_window win) {
 	cairo_push_group(win->cr);
-	win->event_handlers.draw((vtk_event){ VTK_EV_DRAW }, win->event_handlers.draw_data);
+	win->event.draw((vtk_event){ VTK_EV_DRAW }, win->event.data);
 	cairo_pop_group_to_source(win->cr);
 	XClearWindow(win->root->dpy, win->w);
 	cairo_paint(win->cr);
@@ -66,8 +66,8 @@ static void _vtk_window_configure_notify(vtk_window win, XConfigureEvent ev) {
 	vtk_window_get_size(win, &w, &h);
 	if (ev.width != w || ev.height != h) {
 		cairo_xlib_surface_set_size(win->csurf, ev.width, ev.height);
-		if (win->event_handlers.resize) {
-			win->event_handlers.resize((vtk_event){ VTK_EV_RESIZE }, win->event_handlers.resize_data);
+		if (win->event.resize) {
+			win->event.resize((vtk_event){ VTK_EV_RESIZE }, win->event.data);
 		}
 		_vtk_window_draw(win);
 	}
@@ -90,8 +90,8 @@ void vtk_window_mainloop(vtk_window win) {
 			break;
 
 		case ClientMessage:
-			if (ev.xclient.data.l[0] == win->root->wm_delete_window && win->event_handlers.close) {
-				win->event_handlers.close((vtk_event){ VTK_EV_CLOSE }, win->event_handlers.close_data);
+			if (ev.xclient.data.l[0] == win->root->wm_delete_window && win->event.close) {
+				win->event.close((vtk_event){ VTK_EV_CLOSE }, win->event.data);
 			}
 			break;
 		}
@@ -113,22 +113,23 @@ void vtk_window_get_size(vtk_window win, int *width, int *height) {
 
 cairo_t *vtk_window_get_cairo(vtk_window win) { return win->cr; }
 
-void vtk_window_set_event_handler(vtk_window win, vtk_event_type type, vtk_event_handler cb, void *ud) {
+void vtk_window_set_event_handler(vtk_window win, vtk_event_type type, vtk_event_handler cb) {
 	switch (type) {
 	case VTK_EV_CLOSE:
-		win->event_handlers.close = cb;
-		win->event_handlers.close_data = ud;
+		win->event.close = cb;
 		break;
 
 	case VTK_EV_DRAW:
-		win->event_handlers.draw = cb;
-		win->event_handlers.draw_data = ud;
+		win->event.draw = cb;
 		win->event_mask |= ExposureMask;
 		break;
 
 	case VTK_EV_RESIZE:
-		win->event_handlers.resize = cb;
-		win->event_handlers.resize_data = ud;
+		win->event.resize = cb;
 		break;
 	}
+}
+
+void vtk_window_set_event_handler_data(vtk_window win, void *data) {
+	win->event.data = data;
 }

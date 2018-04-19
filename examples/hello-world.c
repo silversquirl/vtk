@@ -50,8 +50,9 @@ int main() {
 		.cr = vtk_window_get_cairo(win),
 	};
 
-	vtk_window_set_event_handler(win, VTK_EV_CLOSE, close_handler, &s);
-	vtk_window_set_event_handler(win, VTK_EV_DRAW, draw_handler, &s);
+	vtk_window_set_event_handler(win, VTK_EV_CLOSE, close_handler);
+	vtk_window_set_event_handler(win, VTK_EV_DRAW, draw_handler);
+	vtk_window_set_event_handler_data(win, &s);
 
 	vtk_window_mainloop(win);
 

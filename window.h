@@ -20,11 +20,8 @@ struct vtk_window {
 			close,
 			draw,
 			resize;
-		void
-			*close_data,
-			*draw_data,
-			*resize_data;
-	} event_handlers;
+		void *data;
+	} event;
 };
 
 #endif
