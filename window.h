@@ -21,6 +21,9 @@ struct vtk_window {
 			draw,
 			key_press,
 			key_release,
+			mouse_move,
+			mouse_press,
+			mouse_release,
 			resize;
 		void *data;
 	} event;

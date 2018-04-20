@@ -109,6 +109,21 @@ void vtk_window_set_event_handler(vtk_window win, vtk_event_type type, vtk_event
 		win->event_mask |= KeyReleaseMask;
 		break;
 
+	case VTK_EV_MOUSE_MOVE:
+		win->event.mouse_move = cb;
+		win->event_mask |= PointerMotionMask;
+		break;
+
+	case VTK_EV_MOUSE_PRESS:
+		win->event.mouse_press = cb;
+		win->event_mask |= ButtonPressMask;
+		break;
+
+	case VTK_EV_MOUSE_RELEASE:
+		win->event.mouse_release = cb;
+		win->event_mask |= ButtonReleaseMask;
+		break;
+
 	case VTK_EV_RESIZE:
 		win->event.resize = cb;
 		break;

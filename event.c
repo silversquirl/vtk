@@ -7,21 +7,23 @@
 #include "window.h"
 #include "vtk.h"
 
-static void _vtk_event_key(vtk_window win, XKeyEvent ev) {
-	bool shift	= ev.state & ShiftMask;
-	bool lock	= ev.state & LockMask;
-	bool control	= ev.state & ControlMask;
-	bool alt	= ev.state & Mod1Mask;
-	bool super	= ev.state & Mod4Mask;
-
+static vtk_modifiers _vtk_modifiers(unsigned int state) {
 	vtk_modifiers vm = 0;
-	if (shift)	{ vm |= VTK_M_SHIFT; }
-	if (lock)	{ vm |= VTK_M_CAPS_LOCK; }
-	if (control)	{ vm |= VTK_M_CONTROL; }
-	if (alt)	{ vm |= VTK_M_ALT; }
-	if (super)	{ vm |= VTK_M_SUPER; }
+	if (state & ShiftMask)	vm |= VTK_M_SHIFT;
+	if (state & LockMask)	vm |= VTK_M_CAPS_LOCK;
+	if (state & ControlMask)	vm |= VTK_M_CONTROL;
+	if (state & Mod1Mask)	vm |= VTK_M_ALT;
+	if (state & Mod4Mask)	vm |= VTK_M_SUPER;
 
-	int shiftlvl = shift != lock ? 1 : 0;
+	if (state & Button1Mask)	vm |= VTK_M_LEFT_BTN;
+	if (state & Button2Mask)	vm |= VTK_M_MIDDLE_BTN;
+	if (state & Button3Mask)	vm |= VTK_M_RIGHT_BTN;
+
+	return vm;
+}
+
+static void _vtk_event_key(vtk_window win, XKeyEvent ev) {
+	int shiftlvl = (ev.state & ShiftMask) == (ev.state & LockMask) ? 1 : 0;
 	KeySym xk = XkbKeycodeToKeysym(win->root->dpy, ev.keycode, 0, shiftlvl);
 
 	vtk_key vk;
@@ -93,15 +95,72 @@ static void _vtk_event_key(vtk_window win, XKeyEvent ev) {
 
 	vtk_event ve = {
 		.type = ev.type == KeyPress ? VTK_EV_KEY_PRESS : VTK_EV_KEY_RELEASE,
-		.key = { vk, vm },
+		.key = { vk, _vtk_modifiers(ev.state) },
 	};
 
 	switch (ev.type) {
 	case KeyPress:
-		win->event.key_press(ve, win->event.data);
+		if (win->event.key_press) {
+			win->event.key_press(ve, win->event.data);
+		}
 		break;
 	case KeyRelease:
-		win->event.key_release(ve, win->event.data);
+		if (win->event.key_release) {
+			win->event.key_release(ve, win->event.data);
+		}
+		break;
+	}
+}
+
+static void _vtk_event_motion(vtk_window win, XMotionEvent ev) {
+	vtk_event ve = {
+		.type = VTK_EV_MOUSE_MOVE,
+		.mouse_move = {
+			.mods = _vtk_modifiers(ev.state),
+			.x = ev.x,
+			.y = ev.y,
+		},
+	};
+
+	if (win->event.mouse_move) {
+		win->event.mouse_move(ve, win->event.data);
+	}
+}
+
+static void _vtk_event_button(vtk_window win, XButtonEvent ev) {
+	vtk_modifiers vb;
+	switch (ev.button) {
+	case Button1:
+		vb = VTK_M_LEFT_BTN;
+		break;
+	case Button2:
+		vb = VTK_M_MIDDLE_BTN;
+		break;
+	case Button3:
+		vb = VTK_M_RIGHT_BTN;
+		break;
+	}
+
+	vtk_event ve = {
+		.type = ev.type == ButtonPress ? VTK_EV_MOUSE_PRESS : VTK_EV_MOUSE_RELEASE,
+		.mouse_button = {
+			.btn = vb,
+			.mods = _vtk_modifiers(ev.state),
+			.x = ev.x,
+			.y = ev.y,
+		},
+	};
+
+	switch (ev.type) {
+	case ButtonPress:
+		if (win->event.mouse_press) {
+			win->event.mouse_press(ve, win->event.data);
+		}
+		break;
+	case ButtonRelease:
+		if (win->event.mouse_release) {
+			win->event.mouse_release(ve, win->event.data);
+		}
 		break;
 	}
 }
@@ -133,6 +192,15 @@ void vtk_event_handle(vtk_window win, XEvent ev) {
 	case KeyPress:
 	case KeyRelease:
 		_vtk_event_key(win, ev.xkey);
+		break;
+
+	case MotionNotify:
+		_vtk_event_motion(win, ev.xmotion);
+		break;
+
+	case ButtonPress:
+	case ButtonRelease:
+		_vtk_event_button(win, ev.xbutton);
 		break;
 
 	case ConfigureNotify:

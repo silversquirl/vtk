@@ -30,6 +30,9 @@ typedef enum vtk_event_type {
 	VTK_EV_DRAW,
 	VTK_EV_KEY_PRESS,
 	VTK_EV_KEY_RELEASE,
+	VTK_EV_MOUSE_MOVE,
+	VTK_EV_MOUSE_PRESS,
+	VTK_EV_MOUSE_RELEASE,
 	VTK_EV_RESIZE,
 } vtk_event_type;
 
@@ -58,14 +61,31 @@ typedef enum vtk_modifiers {
 	VTK_M_CONTROL	= 1 << 2,
 	VTK_M_ALT	= 1 << 3,
 	VTK_M_SUPER	= 1 << 4,
+
+	VTK_M_LEFT_BTN	= 1 << 5,
+	VTK_M_MIDDLE_BTN	= 1 << 6,
+	VTK_M_RIGHT_BTN	= 1 << 7,
 } vtk_modifiers;
 
 typedef struct vtk_event {
 	vtk_event_type type;
-	struct vtk_key_event {
-		vtk_key key;	// ASCII character or value from vtk_key
-		vtk_modifiers mods;	// ORed mask of values from vtk_modifiers
-	} key;
+	union {
+		struct vtk_key_event {
+			vtk_key key;	// ASCII character or value from vtk_key
+			vtk_modifiers mods;	// ORed mask of values from vtk_modifiers
+		} key;
+
+		struct vtk_mouse_move_event {
+			vtk_modifiers mods;	// ORed mask of values from vtk_modifiers
+			int x, y;
+		} mouse_move;
+
+		struct vtk_mouse_button_event {
+			vtk_modifiers btn; // The button that was pressed or released
+			vtk_modifiers mods;	// ORed mask of values from vtk_modifiers
+			int x, y;
+		} mouse_button;
+	};
 } vtk_event;
 
 typedef void (*vtk_event_handler)(vtk_event ev, void *u);

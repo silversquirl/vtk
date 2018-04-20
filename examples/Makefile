@@ -3,7 +3,7 @@
 
 CFLAGS := -Wall -Werror -I.. $(shell pkg-config --cflags --libs cairo-xlib)
 
-all: hello-world
+all: hello-world mouse transparency
 
 clean:
 	rm -f hello-world
