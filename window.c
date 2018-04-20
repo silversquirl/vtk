@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include <cairo-xlib.h>
 #include "debug.h"
 #include "event.h"
@@ -39,7 +40,7 @@ vtk_err vtk_window_new(vtk_window *win, vtk root, const char *title, int x, int 
 	(*win)->cr = cr;
 
 	// Set all the event handlers to NULL
-	(*win)->event = (struct vtk_event_handlers){ NULL };
+	memset(&(*win)->event, 0, sizeof (*win)->event);
 
 	return 0;
 }
@@ -55,7 +56,7 @@ void vtk_window_close(vtk_window win) { win->should_close = true; }
 
 void vtk_window_redraw(vtk_window win) {
 	cairo_push_group(win->cr);
-	win->event.draw((vtk_event){ VTK_EV_DRAW }, win->event.data);
+	win->event.draw.h((vtk_event){ VTK_EV_DRAW }, win->event.draw.d);
 	cairo_pop_group_to_source(win->cr);
 	XClearWindow(win->root->dpy, win->w);
 	cairo_paint(win->cr);
@@ -89,48 +90,57 @@ void vtk_window_get_size(vtk_window win, int *width, int *height) {
 
 cairo_t *vtk_window_get_cairo(vtk_window win) { return win->cr; }
 
-void vtk_window_set_event_handler(vtk_window win, vtk_event_type type, vtk_event_handler cb) {
+void vtk_window_set_event_handler(vtk_window win, vtk_event_type type, vtk_event_handler cb, void *data) {
 	switch (type) {
 	case VTK_EV_CLOSE:
-		win->event.close = cb;
+		win->event.close.h = cb;
+		win->event.close.d = data;
 		break;
 
 	case VTK_EV_DRAW:
-		win->event.draw = cb;
+		win->event.draw.h = cb;
+		win->event.draw.d = data;
 		win->event_mask |= ExposureMask;
 		break;
 
 	case VTK_EV_KEY_PRESS:
-		win->event.key_press = cb;
+		win->event.key_press.h = cb;
+		win->event.key_press.d = data;
 		win->event_mask |= KeyPressMask;
 		break;
 
 	case VTK_EV_KEY_RELEASE:
-		win->event.key_release = cb;
+		win->event.key_release.h = cb;
+		win->event.key_release.d = data;
 		win->event_mask |= KeyReleaseMask;
 		break;
 
 	case VTK_EV_MOUSE_MOVE:
-		win->event.mouse_move = cb;
+		win->event.mouse_move.h = cb;
+		win->event.mouse_move.d = data;
 		win->event_mask |= PointerMotionMask;
 		break;
 
 	case VTK_EV_MOUSE_PRESS:
-		win->event.mouse_press = cb;
+		win->event.mouse_press.h = cb;
+		win->event.mouse_press.d = data;
 		win->event_mask |= ButtonPressMask;
 		break;
 
 	case VTK_EV_MOUSE_RELEASE:
-		win->event.mouse_release = cb;
+		win->event.mouse_release.h = cb;
+		win->event.mouse_release.d = data;
 		win->event_mask |= ButtonReleaseMask;
 		break;
 
 	case VTK_EV_RESIZE:
-		win->event.resize = cb;
+		win->event.resize.h = cb;
+		win->event.resize.d = data;
 		break;
 
 	case VTK_EV_SCROLL:
-		win->event.scroll = cb;
+		win->event.scroll.h = cb;
+		win->event.scroll.d = data;
 		if (win->root->xi2.enable) {
 			DEBUG("XISelectEvents");
 			XISelectEvents(win->root->dpy, win->w, &win->root->xi2.emask, 1);
@@ -139,8 +149,4 @@ void vtk_window_set_event_handler(vtk_window win, vtk_event_type type, vtk_event
 		}
 		break;
 	}
-}
-
-void vtk_window_set_event_handler_data(vtk_window win, void *data) {
-	win->event.data = data;
 }

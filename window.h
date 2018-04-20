@@ -16,7 +16,7 @@ struct vtk_window {
 	cairo_t *cr;
 
 	struct vtk_event_handlers {
-		vtk_event_handler
+		struct { vtk_event_handler h; void *d; }
 			close,
 			draw,
 			key_press,
@@ -26,7 +26,6 @@ struct vtk_window {
 			mouse_release,
 			resize,
 			scroll;
-		void *data;
 	} event;
 };
 

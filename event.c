@@ -105,19 +105,20 @@ static void _vtk_event_key(vtk_window win, XKeyEvent ev) {
 
 	switch (ev.type) {
 	case KeyPress:
-		if (win->event.key_press) {
-			win->event.key_press(ve, win->event.data);
+		if (win->event.key_press.h) {
+			win->event.key_press.h(ve, win->event.key_press.d);
 		}
 		break;
 	case KeyRelease:
-		if (win->event.key_release) {
-			win->event.key_release(ve, win->event.data);
+		if (win->event.key_release.h) {
+			win->event.key_release.h(ve, win->event.key_release.d);
 		}
 		break;
 	}
 }
 
 static void _vtk_event_motion(vtk_window win, XMotionEvent ev) {
+	if (!win->event.mouse_move.h) return;
 	vtk_event ve;
 	ve.mouse_move = (struct vtk_mouse_move_event){
 		.type = VTK_EV_MOUSE_MOVE,
@@ -125,21 +126,18 @@ static void _vtk_event_motion(vtk_window win, XMotionEvent ev) {
 		.x = ev.x,
 		.y = ev.y,
 	};
-
-	if (win->event.mouse_move) {
-		win->event.mouse_move(ve, win->event.data);
-	}
+	win->event.mouse_move.h(ve, win->event.mouse_move.d);
 }
 
 static void _vtk_event_send_scroll(vtk_window win, double amount) {
 	DEBUG("scroll");
-	if (!win->event.scroll) return;
+	if (!win->event.scroll.h) return;
 	vtk_event ve;
 	ve.scroll = (struct vtk_scroll_event){
 		.type = VTK_EV_SCROLL,
 		.amount = amount,
 	};
-	win->event.scroll(ve, win->event.data);
+	win->event.scroll.h(ve, win->event.scroll.d);
 }
 
 static void _vtk_event_button(vtk_window win, XButtonEvent ev) {
@@ -175,13 +173,13 @@ static void _vtk_event_button(vtk_window win, XButtonEvent ev) {
 
 	switch (ev.type) {
 	case ButtonPress:
-		if (win->event.mouse_press) {
-			win->event.mouse_press(ve, win->event.data);
+		if (win->event.mouse_press.h) {
+			win->event.mouse_press.h(ve, win->event.mouse_press.d);
 		}
 		break;
 	case ButtonRelease:
-		if (win->event.mouse_release) {
-			win->event.mouse_release(ve, win->event.data);
+		if (win->event.mouse_release.h) {
+			win->event.mouse_release.h(ve, win->event.mouse_release.d);
 		}
 		break;
 	}
@@ -192,8 +190,8 @@ static void _vtk_event_configure(vtk_window win, XConfigureEvent ev) {
 	vtk_window_get_size(win, &w, &h);
 	if (ev.width != w || ev.height != h) {
 		cairo_xlib_surface_set_size(win->csurf, ev.width, ev.height);
-		if (win->event.resize) {
-			win->event.resize((vtk_event){ VTK_EV_RESIZE }, win->event.data);
+		if (win->event.resize.h) {
+			win->event.resize.h((vtk_event){ VTK_EV_RESIZE }, win->event.resize.d);
 		}
 		vtk_window_redraw(win);
 	}
@@ -253,8 +251,8 @@ finish:
 void vtk_event_handle(vtk_window win, XEvent ev) {
 	switch (ev.type) {
 	case ClientMessage:
-		if (ev.xclient.data.l[0] == win->root->wm_delete_window && win->event.close) {
-			win->event.close((vtk_event){ VTK_EV_CLOSE }, win->event.data);
+		if (ev.xclient.data.l[0] == win->root->wm_delete_window && win->event.close.h) {
+			win->event.close.h((vtk_event){ VTK_EV_CLOSE }, win->event.close.d);
 		}
 		break;
 

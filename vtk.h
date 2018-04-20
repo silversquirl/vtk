@@ -98,7 +98,6 @@ typedef union vtk_event {
 
 typedef void (*vtk_event_handler)(vtk_event ev, void *u);
 
-void vtk_window_set_event_handler(vtk_window win, vtk_event_type type, vtk_event_handler handler);
-void vtk_window_set_event_handler_data(vtk_window win, void *data);
+void vtk_window_set_event_handler(vtk_window win, vtk_event_type type, vtk_event_handler handler, void *data);
 
 #endif

@@ -59,10 +59,9 @@ int main() {
 		.y = 0,
 	};
 
-	vtk_window_set_event_handler(win, VTK_EV_CLOSE, close_handler);
-	vtk_window_set_event_handler(win, VTK_EV_DRAW, draw_handler);
-	vtk_window_set_event_handler(win, VTK_EV_MOUSE_MOVE, mouse_move_handler);
-	vtk_window_set_event_handler_data(win, &s);
+	vtk_window_set_event_handler(win, VTK_EV_CLOSE, close_handler, &s);
+	vtk_window_set_event_handler(win, VTK_EV_DRAW, draw_handler, &s);
+	vtk_window_set_event_handler(win, VTK_EV_MOUSE_MOVE, mouse_move_handler, &s);
 
 	vtk_window_mainloop(win);
 
