@@ -260,6 +260,15 @@ void vtk_event_handle(vtk_window win, XEvent ev) {
 		vtk_window_redraw(win);
 		break;
 
+	case MappingNotify:
+		// Apparently you need to do this for some reason
+		switch (e.xmapping.request) {
+		case MappingModifier:
+		case MappingKeyboard:
+			XRefreshKeyboardMapping(&e.xmapping);
+			break;
+		}
+
 	case KeyPress:
 	case KeyRelease:
 		_vtk_event_key(win, ev.xkey);

@@ -107,12 +107,14 @@ void vtk_window_set_event_handler(vtk_window win, vtk_event_type type, vtk_event
 		win->event.key_press.h = cb;
 		win->event.key_press.d = data;
 		win->event_mask |= KeyPressMask;
+		win->event_mask |= KeymapStateMask;
 		break;
 
 	case VTK_EV_KEY_RELEASE:
 		win->event.key_release.h = cb;
 		win->event.key_release.d = data;
 		win->event_mask |= KeyReleaseMask;
+		win->event_mask |= KeymapStateMask;
 		break;
 
 	case VTK_EV_MOUSE_MOVE:
