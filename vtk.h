@@ -38,6 +38,8 @@ typedef enum vtk_event_type {
 } vtk_event_type;
 
 typedef enum vtk_key {
+	VTK_K_NONE,
+
 	VTK_K_BACKSPACE = 0x08,
 	VTK_K_TAB = 0x09,
 	VTK_K_RETURN = 0x0a,
