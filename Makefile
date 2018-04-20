@@ -2,6 +2,9 @@
 .PHONY: all clean
 
 CFLAGS := -Wall -Werror $(shell pkg-config --cflags cairo-xlib)
+ifdef DEBUG
+CFLAGS += -g -DDEBUG
+endif
 
 all: libvtk.a
 

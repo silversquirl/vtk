@@ -34,6 +34,7 @@ typedef enum vtk_event_type {
 	VTK_EV_MOUSE_PRESS,
 	VTK_EV_MOUSE_RELEASE,
 	VTK_EV_RESIZE,
+	VTK_EV_SCROLL,
 } vtk_event_type;
 
 typedef enum vtk_key {
@@ -85,6 +86,10 @@ typedef struct vtk_event {
 			vtk_modifiers mods;	// ORed mask of values from vtk_modifiers
 			int x, y;
 		} mouse_button;
+
+		struct vtk_scroll_event {
+			double amount;
+		} scroll;
 	};
 } vtk_event;
 

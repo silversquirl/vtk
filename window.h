@@ -24,7 +24,8 @@ struct vtk_window {
 			mouse_move,
 			mouse_press,
 			mouse_release,
-			resize;
+			resize,
+			scroll;
 		void *data;
 	} event;
 };

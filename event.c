@@ -1,6 +1,9 @@
+#include <limits.h>
+#include <strings.h>
 #include <cairo-xlib.h>
 #include <X11/keysym.h>
 #include <X11/XKBlib.h>
+#include <X11/extensions/XInput2.h>
 #include "debug.h"
 #include "event.h"
 #include "root.h"
@@ -23,7 +26,7 @@ static vtk_modifiers _vtk_modifiers(unsigned int state) {
 }
 
 static void _vtk_event_key(vtk_window win, XKeyEvent ev) {
-	int shiftlvl = (ev.state & ShiftMask) == (ev.state & LockMask) ? 1 : 0;
+	int shiftlvl = (ev.state & ShiftMask) == (ev.state & LockMask) ? 0 : 1;
 	KeySym xk = XkbKeycodeToKeysym(win->root->dpy, ev.keycode, 0, shiftlvl);
 
 	vtk_key vk;
@@ -88,7 +91,7 @@ static void _vtk_event_key(vtk_window win, XKeyEvent ev) {
 		if (' ' <= xk && xk <= '~') {
 			vk = xk;
 		} else {
-			DEBUG("Unknown KeySym received: %d", xk);
+			DEBUG("Unknown KeySym received: %lu", xk);
 		}
 		break;
 	}
@@ -127,6 +130,16 @@ static void _vtk_event_motion(vtk_window win, XMotionEvent ev) {
 	}
 }
 
+static void _vtk_event_send_scroll(vtk_window win, double amount) {
+	DEBUG("scroll");
+	if (!win->event.scroll) return;
+	vtk_event ve = {
+		.type = VTK_EV_SCROLL,
+		.scroll.amount = amount,
+	};
+	win->event.scroll(ve, win->event.data);
+}
+
 static void _vtk_event_button(vtk_window win, XButtonEvent ev) {
 	vtk_modifiers vb;
 	switch (ev.button) {
@@ -139,6 +152,14 @@ static void _vtk_event_button(vtk_window win, XButtonEvent ev) {
 	case Button3:
 		vb = VTK_M_RIGHT_BTN;
 		break;
+	case Button4:
+		if (!win->root->xi2.enable) {
+			return _vtk_event_send_scroll(win, 1);
+		}
+	case Button5:
+		if (!win->root->xi2.enable) {
+			return _vtk_event_send_scroll(win, -1);
+		}
 	}
 
 	vtk_event ve = {
@@ -177,6 +198,57 @@ static void _vtk_event_configure(vtk_window win, XConfigureEvent ev) {
 	}
 }
 
+static void _vtk_event_scroll(vtk_window win, XGenericEventCookie cookie) {
+	union {
+		XIDeviceChangedEvent *devchange;
+		XIDeviceEvent *dev;
+		XIEnterEvent *enter;
+	} ev = { cookie.data };
+
+	switch (cookie.evtype) {
+	case XI_DeviceChanged:
+		DEBUG("DeviceChanged");
+		vtk_root_update_xi2_scroll(win->root, ev.devchange->classes, ev.devchange->num_classes);
+		break;
+
+	case XI_Enter:
+		if (ev.enter->evtype == XI_Enter && ev.enter->mode == XINotifyNormal) {
+			DEBUG("Enter");
+			win->root->xi2.scroll_v.reset = true;
+		}
+		break;
+
+	case XI_Motion:
+		for (int byte_i = 0, val_i = 0; byte_i < ev.dev->valuators.mask_len; byte_i++) {
+			int cur_byte = ev.dev->valuators.mask[byte_i], bit_i;
+			int valuator = CHAR_BIT * byte_i - 1; // - 1 accounts for ffs starting at 1
+
+			// Loop through each set bit
+			while ((bit_i = ffs(cur_byte))) {
+				valuator += bit_i;
+				cur_byte >>= bit_i;
+
+				if (valuator > win->root->xi2.scroll_v.valuator) goto finish;
+				if (valuator == win->root->xi2.scroll_v.valuator) {
+					double value = ev.dev->valuators.values[val_i];
+					if (win->root->xi2.scroll_v.reset) {
+						DEBUG("Resetting stored scroll value");
+						win->root->xi2.scroll_v.reset = false;
+					} else {
+						double delta = win->root->xi2.scroll_v.value - value;
+						_vtk_event_send_scroll(win, delta / win->root->xi2.scroll_v.increment);
+					}
+					win->root->xi2.scroll_v.value = value;
+				}
+
+				val_i++;
+			}
+		}
+finish:
+		break;
+	}
+}
+
 void vtk_event_handle(vtk_window win, XEvent ev) {
 	switch (ev.type) {
 	case ClientMessage:
@@ -206,5 +278,11 @@ void vtk_event_handle(vtk_window win, XEvent ev) {
 	case ConfigureNotify:
 		_vtk_event_configure(win, ev.xconfigure);
 		break;
+
+	case GenericEvent:
+		if (ev.xgeneric.extension == win->root->xi2.opcode && XGetEventData(win->root->dpy, &ev.xcookie)) {
+			_vtk_event_scroll(win, ev.xcookie);
+			XFreeEventData(win->root->dpy, &ev.xcookie);
+		}
 	}
 }

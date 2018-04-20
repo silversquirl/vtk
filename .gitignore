@@ -1,3 +1,5 @@
 *.o
 *.a
-examples/hello-world
+examples/*
+!examples/Makefile
+!examples/*.c

@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <cairo-xlib.h>
+#include "debug.h"
 #include "event.h"
 #include "root.h"
 #include "window.h"
@@ -126,6 +127,16 @@ void vtk_window_set_event_handler(vtk_window win, vtk_event_type type, vtk_event
 
 	case VTK_EV_RESIZE:
 		win->event.resize = cb;
+		break;
+
+	case VTK_EV_SCROLL:
+		win->event.scroll = cb;
+		if (win->root->xi2.enable) {
+			DEBUG("XISelectEvents");
+			XISelectEvents(win->root->dpy, win->w, &win->root->xi2.emask, 1);
+		} else {
+			win->event_mask |= ButtonPressMask;
+		}
 		break;
 	}
 }
