@@ -262,10 +262,10 @@ void vtk_event_handle(vtk_window win, XEvent ev) {
 
 	case MappingNotify:
 		// Apparently you need to do this for some reason
-		switch (e.xmapping.request) {
+		switch (ev.xmapping.request) {
 		case MappingModifier:
 		case MappingKeyboard:
-			XRefreshKeyboardMapping(&e.xmapping);
+			XRefreshKeyboardMapping(&ev.xmapping);
 			break;
 		}
 
