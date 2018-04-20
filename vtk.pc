@@ -1,0 +1,5 @@
+Name: vtk
+Description: A GUI "toolkit" by vktec
+Version: 0.1.0
+Requires: cairo-xlib xi
+Libs: -lvtk
