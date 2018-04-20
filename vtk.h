@@ -68,29 +68,32 @@ typedef enum vtk_modifiers {
 	VTK_M_RIGHT_BTN	= 1 << 7,
 } vtk_modifiers;
 
-typedef struct vtk_event {
+typedef union vtk_event {
 	vtk_event_type type;
-	union {
-		struct vtk_key_event {
-			vtk_key key;	// ASCII character or value from vtk_key
-			vtk_modifiers mods;	// ORed mask of values from vtk_modifiers
-		} key;
 
-		struct vtk_mouse_move_event {
-			vtk_modifiers mods;	// ORed mask of values from vtk_modifiers
-			int x, y;
-		} mouse_move;
+	struct vtk_key_event {
+		vtk_event_type type;
+		vtk_key key;	// ASCII character or value from vtk_key
+		vtk_modifiers mods;	// ORed mask of values from vtk_modifiers
+	} key;
 
-		struct vtk_mouse_button_event {
-			vtk_modifiers btn; // The button that was pressed or released
-			vtk_modifiers mods;	// ORed mask of values from vtk_modifiers
-			int x, y;
-		} mouse_button;
+	struct vtk_mouse_move_event {
+		vtk_event_type type;
+		vtk_modifiers mods;	// ORed mask of values from vtk_modifiers
+		int x, y;
+	} mouse_move;
 
-		struct vtk_scroll_event {
-			double amount;
-		} scroll;
-	};
+	struct vtk_mouse_button_event {
+		vtk_event_type type;
+		vtk_modifiers btn; // The button that was pressed or released
+		vtk_modifiers mods;	// ORed mask of values from vtk_modifiers
+		int x, y;
+	} mouse_button;
+
+	struct vtk_scroll_event {
+		vtk_event_type type;
+		double amount;
+	} scroll;
 } vtk_event;
 
 typedef void (*vtk_event_handler)(vtk_event ev, void *u);

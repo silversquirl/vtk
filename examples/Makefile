@@ -8,5 +8,5 @@ all: hello-world mouse scroll transparency
 clean:
 	rm -f hello-world
 
-%: %.c
-	$(CC) -o $@ $^ $(CFLAGS)
+%: %.c ../libvtk.a
+	$(CC) -o $@ $< $(CFLAGS)

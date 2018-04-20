@@ -96,9 +96,11 @@ static void _vtk_event_key(vtk_window win, XKeyEvent ev) {
 		break;
 	}
 
-	vtk_event ve = {
+	vtk_event ve;
+	ve.key = (struct vtk_key_event){
 		.type = ev.type == KeyPress ? VTK_EV_KEY_PRESS : VTK_EV_KEY_RELEASE,
-		.key = { vk, _vtk_modifiers(ev.state) },
+		.key = vk,
+		.mods = _vtk_modifiers(ev.state)
 	};
 
 	switch (ev.type) {
@@ -116,13 +118,12 @@ static void _vtk_event_key(vtk_window win, XKeyEvent ev) {
 }
 
 static void _vtk_event_motion(vtk_window win, XMotionEvent ev) {
-	vtk_event ve = {
+	vtk_event ve;
+	ve.mouse_move = (struct vtk_mouse_move_event){
 		.type = VTK_EV_MOUSE_MOVE,
-		.mouse_move = {
-			.mods = _vtk_modifiers(ev.state),
-			.x = ev.x,
-			.y = ev.y,
-		},
+		.mods = _vtk_modifiers(ev.state),
+		.x = ev.x,
+		.y = ev.y,
 	};
 
 	if (win->event.mouse_move) {
@@ -133,9 +134,10 @@ static void _vtk_event_motion(vtk_window win, XMotionEvent ev) {
 static void _vtk_event_send_scroll(vtk_window win, double amount) {
 	DEBUG("scroll");
 	if (!win->event.scroll) return;
-	vtk_event ve = {
+	vtk_event ve;
+	ve.scroll = (struct vtk_scroll_event){
 		.type = VTK_EV_SCROLL,
-		.scroll.amount = amount,
+		.amount = amount,
 	};
 	win->event.scroll(ve, win->event.data);
 }
@@ -162,14 +164,13 @@ static void _vtk_event_button(vtk_window win, XButtonEvent ev) {
 		}
 	}
 
-	vtk_event ve = {
+	vtk_event ve;
+	ve.mouse_button = (struct vtk_mouse_button_event){
 		.type = ev.type == ButtonPress ? VTK_EV_MOUSE_PRESS : VTK_EV_MOUSE_RELEASE,
-		.mouse_button = {
-			.btn = vb,
-			.mods = _vtk_modifiers(ev.state),
-			.x = ev.x,
-			.y = ev.y,
-		},
+		.btn = vb,
+		.mods = _vtk_modifiers(ev.state),
+		.x = ev.x,
+		.y = ev.y,
 	};
 
 	switch (ev.type) {
