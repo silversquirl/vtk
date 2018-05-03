@@ -58,6 +58,8 @@ typedef enum vtk_key {
 	VTK_K_RIGHT,
 } vtk_key;
 
+vtk_key vtk_key_from_string(const char *s);
+
 typedef enum vtk_modifiers {
 	VTK_M_SHIFT	= 1 << 0,
 	VTK_M_CAPS_LOCK	= 1 << 1,
@@ -69,6 +71,8 @@ typedef enum vtk_modifiers {
 	VTK_M_MIDDLE_BTN	= 1 << 6,
 	VTK_M_RIGHT_BTN	= 1 << 7,
 } vtk_modifiers;
+
+vtk_modifiers vtk_modifier_from_string(const char *s);
 
 typedef union vtk_event {
 	vtk_event_type type;

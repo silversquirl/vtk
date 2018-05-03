@@ -27,7 +27,7 @@ uninstall:
 	rm -f $(PC_DIR)/vtk.pc
 	rm -f $(INC_DIR)/vtk.h
 
-libvtk.a: error.o event.o root.o window.o
+libvtk.a: error.o event.o key.o root.o window.o
 	ar rcs $@ $^
 
 %.o: %.c %.h
