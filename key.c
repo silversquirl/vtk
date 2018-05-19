@@ -1,4 +1,5 @@
 #include <strings.h>
+#include <ctype.h>
 #include <vtk.h>
 
 vtk_key vtk_key_from_string(const char *s) {
@@ -43,6 +44,15 @@ vtk_modifiers vtk_modifier_from_string(const char *s) {
 	else if (!strcasecmp(s, "RIGHT_BTN")) return VTK_M_RIGHT_BTN;
 	else if (!strcasecmp(s, "RIGHT")) return VTK_M_RIGHT_BTN;
 	else if (!strcasecmp(s, "BTN3")) return VTK_M_LEFT_BTN;
+
+	// Special shorter versions
+	if (*s != '\0' && s[1] == '\0') {
+		switch (toupper(*s)) {
+		case 'S': return VTK_M_SHIFT;
+		case 'C': return VTK_M_CONTROL;
+		case 'A': return VTK_M_ALT;
+		}
+	}
 
 	return VTK_K_NONE;
 }
