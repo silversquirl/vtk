@@ -2,6 +2,10 @@
 #include <ctype.h>
 #include <vtk.h>
 
+inline static int len1(const char *s) {
+	return *s != '\0' && s[1] == '\0'; // Is the string 1 char long?
+}
+
 vtk_key vtk_key_from_string(const char *s) {
 	if (!strcasecmp(s, "BACKSPACE")) return VTK_K_BACKSPACE;
 	else if (!strcasecmp(s, "TAB")) return VTK_K_TAB;
@@ -23,6 +27,9 @@ vtk_key vtk_key_from_string(const char *s) {
 	else if (!strcasecmp(s, "DOWN")) return VTK_K_DOWN;
 	else if (!strcasecmp(s, "LEFT")) return VTK_K_LEFT;
 	else if (!strcasecmp(s, "RIGHT")) return VTK_K_RIGHT;
+
+	// Literal characters
+	else if (len1(s) && ' ' <= *s && *s <= '~') return *s;
 
 	return VTK_K_NONE;
 }
@@ -46,7 +53,7 @@ vtk_modifiers vtk_modifier_from_string(const char *s) {
 	else if (!strcasecmp(s, "BTN3")) return VTK_M_LEFT_BTN;
 
 	// Special shorter versions
-	if (*s != '\0' && s[1] == '\0') {
+	if (len1(s)) {
 		switch (toupper(*s)) {
 		case 'S': return VTK_M_SHIFT;
 		case 'C': return VTK_M_CONTROL;
