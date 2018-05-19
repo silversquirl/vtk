@@ -39,6 +39,7 @@ vtk_modifiers vtk_modifier_from_string(const char *s) {
 	else if (!strcasecmp(s, "CAPS_LOCK")) return VTK_M_CAPS_LOCK;
 	else if (!strcasecmp(s, "CAPSLOCK")) return VTK_M_CAPS_LOCK;
 	else if (!strcasecmp(s, "CONTROL")) return VTK_M_CONTROL;
+	else if (!strcasecmp(s, "CTRL")) return VTK_M_CONTROL;
 	else if (!strcasecmp(s, "ALT")) return VTK_M_ALT;
 	else if (!strcasecmp(s, "SUPER")) return VTK_M_SUPER;
 
