@@ -1,6 +1,6 @@
 #include <strings.h>
 #include <ctype.h>
-#include <vtk.h>
+#include "vtk.h"
 
 inline static int len1(const char *s) {
 	return *s != '\0' && s[1] == '\0'; // Is the string 1 char long?
