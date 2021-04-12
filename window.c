@@ -78,6 +78,7 @@ void vtk_window_redraw(vtk_window win) {
 void vtk_window_mainloop(vtk_window win) {
 	XSelectInput(win->root->dpy, win->w, win->event_mask);
 	XMapWindow(win->root->dpy, win->w);
+	XFlush(win->root->dpy);
 
 	struct pollfd fds[] = {
 		{ ConnectionNumber(win->root->dpy), POLLIN },
