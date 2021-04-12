@@ -10,6 +10,8 @@ char *vtk_strerr(vtk_err err) {
 		return "Could not find TrueColor visual for X display";
 	case VTK_XOPENDISPLAY_FAILED:
 		return "Opening X display failed";
+	case VTK_EVENTFD_FAILED:
+		return "Creating eventfd failed";
 	default:
 		return "Unknown error";
 	}

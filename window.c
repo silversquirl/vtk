@@ -1,6 +1,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <cairo-xlib.h>
+#include <poll.h>
+#include <sys/eventfd.h>
+#include <unistd.h>
 #include "debug.h"
 #include "event.h"
 #include "root.h"
@@ -31,10 +34,17 @@ vtk_err vtk_window_new(vtk_window *win, vtk root, const char *title, int x, int 
 		return VTK_ALLOCATION_FAILED;
 	}
 
+	int updatefd = eventfd(0, EFD_NONBLOCK);
+	if (updatefd == -1) {
+		free(*win);
+		return VTK_EVENTFD_FAILED;
+	}
+
 	(*win)->root = root;
 	(*win)->w = w;
 	(*win)->event_mask = StructureNotifyMask; // We want to handle at least resize events
 	(*win)->should_close = false;
+	(*win)->updatefd = updatefd;
 
 	(*win)->csurf = csurf;
 	(*win)->cr = cr;
@@ -46,6 +56,7 @@ vtk_err vtk_window_new(vtk_window *win, vtk root, const char *title, int x, int 
 }
 
 void vtk_window_destroy(vtk_window win) {
+	close(win->updatefd);
 	cairo_destroy(win->cr);
 	cairo_surface_destroy(win->csurf);
 	XDestroyWindow(win->root->dpy, win->w);
@@ -68,10 +79,26 @@ void vtk_window_mainloop(vtk_window win) {
 	XSelectInput(win->root->dpy, win->w, win->event_mask);
 	XMapWindow(win->root->dpy, win->w);
 
+	struct pollfd fds[] = {
+		{ ConnectionNumber(win->root->dpy), POLLIN },
+		{ win->updatefd, POLLIN },
+	};
+
 	XEvent ev;
 	while (!win->should_close) {
-		XNextEvent(win->root->dpy, &ev);
-		vtk_event_handle(win, ev);
+		poll(fds, sizeof fds / sizeof fds[0], -1);
+
+		while (XPending(win->root->dpy) > 0) {
+			XNextEvent(win->root->dpy, &ev);
+			vtk_event_handle(win, ev);
+		}
+
+		uint64_t counter;
+		if (read(win->updatefd, &counter, sizeof counter) != -1) {
+			if (counter > 0 && win->event.update.h) {
+				win->event.update.h((vtk_event){ VTK_EV_UPDATE }, win->event.update.d);
+			}
+		}
 	}
 }
 
@@ -150,5 +177,15 @@ void vtk_window_set_event_handler(vtk_window win, vtk_event_type type, vtk_event
 			win->event_mask |= ButtonPressMask;
 		}
 		break;
+
+	case VTK_EV_UPDATE:
+		win->event.update.h = cb;
+		win->event.update.d = data;
+		break;
 	}
+}
+
+void vtk_window_trigger_update(vtk_window win) {
+	uint64_t counter = 1;
+	write(win->updatefd, &counter, sizeof counter);
 }

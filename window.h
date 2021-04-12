@@ -11,6 +11,7 @@ struct vtk_window {
 	Window w;
 	long event_mask;
 	bool should_close;
+	int updatefd;
 
 	cairo_surface_t *csurf;
 	cairo_t *cr;
@@ -25,7 +26,8 @@ struct vtk_window {
 			mouse_press,
 			mouse_release,
 			resize,
-			scroll;
+			scroll,
+			update;
 	} event;
 };
 

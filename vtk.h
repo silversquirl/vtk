@@ -8,6 +8,7 @@ typedef enum vtk_err {
 	VTK_ALLOCATION_FAILED,
 	VTK_NO_SUITABLE_VISUAL,
 	VTK_XOPENDISPLAY_FAILED,
+	VTK_EVENTFD_FAILED,
 } vtk_err;
 char *vtk_strerr(vtk_err err);
 
@@ -24,6 +25,7 @@ void vtk_window_mainloop(vtk_window win);
 void vtk_window_set_title(vtk_window win, const char *title);
 void vtk_window_get_size(vtk_window win, int *width, int *height);
 cairo_t *vtk_window_get_cairo(vtk_window win);
+void vtk_window_trigger_update(vtk_window win);
 
 typedef enum vtk_event_type {
 	VTK_EV_CLOSE,
@@ -35,6 +37,7 @@ typedef enum vtk_event_type {
 	VTK_EV_MOUSE_RELEASE,
 	VTK_EV_RESIZE,
 	VTK_EV_SCROLL,
+	VTK_EV_UPDATE,
 } vtk_event_type;
 
 typedef enum vtk_key {
