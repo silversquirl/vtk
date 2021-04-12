@@ -1,7 +1,7 @@
 .POSIX:
 .PHONY: all clean install uninstall
 
-CFLAGS := -Wall -Werror $(shell pkg-config --cflags cairo-xlib)
+CFLAGS := -Wall -Werror $(shell pkg-config --cflags cairo-xlib) -D_XOPEN_SOURCE=700
 ifdef DEBUG
 CFLAGS += -g -DDEBUG
 endif
